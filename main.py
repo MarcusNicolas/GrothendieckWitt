@@ -50,8 +50,7 @@ def cyclic_units_mod_sq(cyclic_type):
   return classes, lambda x: tab[x.val()]
 
 # Prend un anneau Z/nZ et renvoie la matrice des relations
-def cyclic_MW_matrix(cyclic_type):
-  classes, p = cyclic_units_mod_sq(cyclic_type)
+def cyclic_MW_matrix(cyclic_type, classes, pr):
   mat = []
   unit = cyclic_type(1)
 
@@ -60,10 +59,10 @@ def cyclic_MW_matrix(cyclic_type):
     line = [ 0 for _ in classes ]
     a = next(iter(x))
 
-    line[p(a)] += 1
-    line[p(-a)] += 1
-    line[p(unit)] -= 1
-    line[p(-unit)] -= 1
+    line[pr(a)] += 1
+    line[pr(-a)] += 1
+    line[pr(unit)] -= 1
+    line[pr(-unit)] -= 1
 
     mat.append(line)
 
@@ -75,11 +74,11 @@ def cyclic_MW_matrix(cyclic_type):
       b = next(iter(classes[j]))
 
       # si a+b est inversible
-      if p(a+b) != -1:
-        line[p(a)] += 1
-        line[p(b)] += 1
-        line[p(a+b)] -= 1
-        line[p(a*b*(a+b))] -= 1
+      if pr(a+b) != -1:
+        line[pr(a)] += 1
+        line[pr(b)] += 1
+        line[pr(a+b)] -= 1
+        line[pr(a*b*(a+b))] -= 1
 
         mat.append(line)
 
@@ -93,8 +92,6 @@ def cyclic_MW_matrix(cyclic_type):
 def solution_exists(M):
   D, P, _ = sympy.matrices.normalforms.smith_normal_decomp(M, domain=sympy.ZZ)
   n, m = M.shape # P est carrée de taille n x n
-
-  print(n, m)
 
   def test(v):
     w = P * sympy.Matrix(v)
@@ -112,35 +109,25 @@ def solution_exists(M):
 
   return test
 
-# Étant donné un type cyclique, renvoie la fonction qui teste l'équivalence de
-# deux vecteurs
-def cyclic_MW_equiv(cyclic_type):
-  
-  return []
+# Étant donné un anneau Z/nZ, renvoie une fonction permettant de tester
+# l'équivalence de deux vecteurs de Z[G(R)] modulo les relations de MW
+def cyclic_MW_equiv(cyclic_type, classes, pr):
+  mat = cyclic_MW_matrix(cyclic_type, classes, pr)
+  is_zero = solution_exists(M)
+
+  return (lambda u, v: is_zero([u[i] - v[i] for i in range(len(u))]))
 
 
-
-# Create Cyclic classes for specific moduli
-Cyclic2 = rings.create_cyclic_class(2)
-Cyclic3 = rings.create_cyclic_class(3)
-Cyclic8 = rings.create_cyclic_class(33)
-Cyclic5 = rings.create_cyclic_class(5)
-# Add more as needed...
-
-print(sympy.__version__)
-
-#Test
-classes, f = cyclic_units_mod_sq(Cyclic8)
-print(f"Classes: { classes }")
-
-M = sympy.Matrix(cyclic_MW_matrix(Cyclic8))
+# Étant donné un anneau Z/nZ, calculer les classes d'équivalence de vecteurs de
+# la forme <a> + <b> + <c> + <d> où a, b, c, d sont des unités, modulo 
 
 
+# Notre anneau R est ici Z/8Z
+R = rings.create_cyclic_class(8)
 
-N = sympy.Matrix([[1, 2], [0, 3]])
-f = solution_exists(N)
+classes, pr = cyclic_units_mod_sq(R)
+M = sympy.Matrix(cyclic_MW_matrix(R, classes, pr))
 
-print(f([87247, -66]))
 
 # Deux problèmes:
 # 1) On veut regarder quels sont les relations (a_i) = (b_i) impliquées par
