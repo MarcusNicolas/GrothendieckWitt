@@ -1,10 +1,10 @@
 import math
-#import sympy as sp
 import sympy
 import sympy.matrices.normalforms
 import rings
 
-# Given a set with an equivalence relation, return the equivalence classes
+# On prends un ensemble muni d'une rel d'équivalence, et on renvoie les classes
+# d'équivalence sous forme de liste
 def equiv_classes(dom, equiv):
   classes = []
   ord_dom = []
