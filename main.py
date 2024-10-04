@@ -1,3 +1,5 @@
+from typing import Optional
+
 import math
 import sympy
 import sympy.matrices.normalforms
@@ -41,7 +43,7 @@ def cyclic_units_mod_sq(cyclic_type):
   units_sq = { x*x for x in units }
 
   classes = equiv_classes(units, lambda x, y : any(a*x == y for a in units_sq))
-  tab = [ -1 for i in range(n) ]
+  tab = [ None for i in range(n) ]
 
   for k in range(len(classes)):
     for x in classes[k]:
@@ -53,6 +55,7 @@ def cyclic_units_mod_sq(cyclic_type):
 def cyclic_MW_matrix(cyclic_type, classes, pr):
   mat = []
   unit = cyclic_type(1)
+  n = cyclic_type.modulus
 
   # relations <a> + <-a> = <1> + <-1>
   for x in classes:
@@ -67,14 +70,18 @@ def cyclic_MW_matrix(cyclic_type, classes, pr):
     mat.append(line)
 
   # relations <a> + <b> = <a+b> + <(a+b)ab>
-  for i in range(len(classes)):
-    for j in range(i, len(classes)):
-      line = [ 0 for _ in classes ]
-      a = next(iter(classes[i]))
-      b = next(iter(classes[j]))
+  for i in range(n):
+    a = cyclic_type(i)
 
-      # si a+b est inversible
-      if pr(a+b) != -1:
+    if pr(a) == None:
+      break
+
+    for j in range(a, n):
+      b = cyclic_type(j)
+
+      if pr(b) != None and pr(a+b) != None:
+        line = [ 0 for _ in classes ]
+
         line[pr(a)] += 1
         line[pr(b)] += 1
         line[pr(a+b)] -= 1
@@ -119,14 +126,73 @@ def cyclic_MW_equiv(cyclic_type, classes, pr):
 
 
 # Étant donné un anneau Z/nZ, calculer les classes d'équivalence de vecteurs de
-# la forme <a> + <b> + <c> + <d> où a, b, c, d sont des unités, modulo 
+# la forme <a> + <b> + <c> + <d> où a, b, c, d sont des unités, modulo MW
+# Ensuite on peut tester l'équivalence avec la présentation de Knebuch par force
+# brute (modulo réduction avec symétries)
+def cyclic_MW_four_diag(cyclic_type, classes, pr):
+  n = cyclic_type.modulus
+
+  vecs = [ ]
+
+  for i in range(len(classes)):
+    for j in range(i, len(classes)):
+      for k in range(j, len(classes)):
+        for l in range(k, len(classes)):
+          v = [ 0 for _ in classes ]
+
+          v[i] += 1
+          v[j] += 1
+          v[k] += 1
+          v[l] += 1
+
+          vecs.append(v)
+
+  # TODO
+
+  return 0
+
+def cyclic_GW_four_diag(cyclic_type, classes, pr):
+  n = cyclic_type.modulus
+  choice = [ next(iter(classes[i])) for i in range(len(classes)) ]
+
+  diags = [ ]
+
+  for i in range(len(classes)):
+    for j in range(len(classes)):
+      for k in  range(len(classes)):
+        for l in range(len(classes)):
+          diag = rings.Mat(4, 4)
+
+          diag[0,0] = cyclic_type(choice(i))
+          diag[1,1] = cyclic_type(choice(j))
+          diag[2,2] = cyclic_type(choice(k))
+          diag[3,3] = cyclic_type(choice(l))
+
+          diags.append(diag)
 
 
-# Notre anneau R est ici Z/8Z
-R = rings.create_cyclic_class(8)
+  # Prend une matrice diagonale et renvoie un élément de Z[G]
+  def pr_diag(diag):
+    v = [ 0 for _ in classes ]
+
+    v[pr(diag(0,0))] += 1
+    v[pr(diag(1,1))] += 1
+    v[pr(diag(2,2))] += 1
+    v[pr(diag(3,3))] += 1
+
+    return v
+
+  return 0
+
+
+
+# Notre anneau R est ici un Z/nZ
+R = rings.create_cyclic_class(512)
 
 classes, pr = cyclic_units_mod_sq(R)
 M = sympy.Matrix(cyclic_MW_matrix(R, classes, pr))
+
+print(M)
 
 
 # Deux problèmes:
