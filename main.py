@@ -9,28 +9,24 @@ import rings
 # d'équivalence sous forme de liste
 def equiv_classes(dom, equiv):
   classes = []
-  ord_dom = []
+  mark = [ True for _ in dom ]
+  ref = [ None for _ in dom ]
 
-  for x in dom:
-    ord_dom.append((x, True))
 
-  for i in range(len(ord_dom)):
-    x, mark_x = ord_dom[i]
-    
-    if mark_x:
-      ord_dom[i] = (x, False)
-      classe = {x}
+  for i in range(len(dom)):
+    if mark[i]:
+      classe = [ ]
+      m = len(classes)
 
-      for j in range(len(ord_dom)):
-        y, mark_y = ord_dom[j]
-
-        if mark_y and equiv(x, y):
-          ord_dom[j] = (y, False)
-          classe.add(y)
+      for j in range(len(dom)):
+        if mark[j] and equiv(dom[i], dom[j]):
+          mark[j] = False
+          ref[j] = m
+          classe.append(dom[j])
         
       classes.append(classe)
     
-  return classes
+  return classes, lambda i: classes[ref[i]]
 
 
 # Étant donné un entier n, calcule les unités, puis les classes d'équivalence
@@ -42,30 +38,30 @@ def cyclic_units_mod_sq(cyclic_type):
   units = { cyclic_type(x) for x in range(1, n) if math.gcd(x, n) == 1 }
   units_sq = { x*x for x in units }
 
-  classes = equiv_classes(units, lambda x, y : any(a*x == y for a in units_sq))
+  G, _ = equiv_classes(list(units), lambda x, y : any(a*x == y for a in units_sq))
   tab = [ None for i in range(n) ]
 
-  for k in range(len(classes)):
-    for x in classes[k]:
+  for k in range(len(G)):
+    for x in G[k]:
       tab[x.val()] = k
 
-  return classes, lambda x: tab[x.val()]
+  return G, lambda x: tab[x.val()]
 
 # Prend un anneau Z/nZ et renvoie la matrice des relations
-def cyclic_MW_matrix(cyclic_type, classes, pr):
+def cyclic_MW_matrix(cyclic_type, G, pr_G):
   mat = []
   unit = cyclic_type(1)
   n = cyclic_type.modulus
 
   # relations <a> + <-a> = <1> + <-1>
-  for x in classes:
-    line = [ 0 for _ in classes ]
+  for x in G:
+    line = [ 0 for _ in G ]
     a = next(iter(x))
 
-    line[pr(a)] += 1
-    line[pr(-a)] += 1
-    line[pr(unit)] -= 1
-    line[pr(-unit)] -= 1
+    line[pr_G(a)] += 1
+    line[pr_G(-a)] += 1
+    line[pr_G(unit)] -= 1
+    line[pr_G(-unit)] -= 1
 
     mat.append(line)
 
@@ -73,19 +69,19 @@ def cyclic_MW_matrix(cyclic_type, classes, pr):
   for i in range(n):
     a = cyclic_type(i)
 
-    if pr(a) == None:
+    if pr_G(a) == None:
       break
 
     for j in range(a, n):
       b = cyclic_type(j)
 
-      if pr(b) != None and pr(a+b) != None:
-        line = [ 0 for _ in classes ]
+      if pr_G(b) != None and pr_G(a+b) != None:
+        line = [ 0 for _ in G ]
 
-        line[pr(a)] += 1
-        line[pr(b)] += 1
-        line[pr(a+b)] -= 1
-        line[pr(a*b*(a+b))] -= 1
+        line[pr_G(a)] += 1
+        line[pr_G(b)] += 1
+        line[pr_G(a+b)] -= 1
+        line[pr_G(a*b*(a+b))] -= 1
 
         mat.append(line)
 
@@ -118,9 +114,9 @@ def solution_exists(M):
 
 # Étant donné un anneau Z/nZ, renvoie une fonction permettant de tester
 # l'équivalence de deux vecteurs de Z[G(R)] modulo les relations de MW
-def cyclic_MW_equiv(cyclic_type, classes, pr):
-  mat = cyclic_MW_matrix(cyclic_type, classes, pr)
-  is_zero = solution_exists(M)
+def cyclic_MW_equiv(cyclic_type, G, pr_G):
+  mat = cyclic_MW_matrix(cyclic_type, G, pr_G)
+  is_zero = solution_exists(mat)
 
   return (lambda u, v: is_zero([u[i] - v[i] for i in range(len(u))]))
 
@@ -129,16 +125,16 @@ def cyclic_MW_equiv(cyclic_type, classes, pr):
 # la forme <a> + <b> + <c> + <d> où a, b, c, d sont des unités, modulo MW
 # Ensuite on peut tester l'équivalence avec la présentation de Knebuch par force
 # brute (modulo réduction avec symétries)
-def cyclic_MW_four_diag(cyclic_type, classes, pr):
+def cyclic_MW_four_diag(cyclic_type, G, pr_G):
   n = cyclic_type.modulus
 
   vecs = [ ]
 
-  for i in range(len(classes)):
-    for j in range(i, len(classes)):
-      for k in range(j, len(classes)):
-        for l in range(k, len(classes)):
-          v = [ 0 for _ in classes ]
+  for i in range(len(G)):
+    for j in range(i, len(G)):
+      for k in range(j, len(G)):
+        for l in range(k, len(G)):
+          v = [ 0 for _ in G ]
 
           v[i] += 1
           v[j] += 1
@@ -147,9 +143,10 @@ def cyclic_MW_four_diag(cyclic_type, classes, pr):
 
           vecs.append(v)
 
-  # TODO
+  vecs, pr_vec = equiv_classes(vecs, cyclic_MW_equiv(cyclic_type, G, pr_G))
 
-  return 0
+  return vecs, pr_vec
+
 
 def cyclic_GW_four_diag(cyclic_type, classes, pr):
   n = cyclic_type.modulus
@@ -187,12 +184,12 @@ def cyclic_GW_four_diag(cyclic_type, classes, pr):
 
 
 # Notre anneau R est ici un Z/nZ
-R = rings.create_cyclic_class(512)
+R = rings.create_cyclic_class(256)
 
-classes, pr = cyclic_units_mod_sq(R)
-M = sympy.Matrix(cyclic_MW_matrix(R, classes, pr))
+G, pr_G = cyclic_units_mod_sq(R)
 
-print(M)
+vecs, pr_vec = cyclic_MW_four_diag(R, G, pr_G)
+print(len(vecs))
 
 
 # Deux problèmes:
