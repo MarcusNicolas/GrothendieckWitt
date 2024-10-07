@@ -35,7 +35,8 @@ def equiv_classes(dom, equiv):
 def cyclic_units_mod_sq(cyclic_type):
   n = cyclic_type.modulus
 
-  units = { cyclic_type(x) for x in range(1, n) if math.gcd(x, n) == 1 }
+
+  units = { cyclic_type(x) for x in range(n) if math.gcd(x, n) == 1 }
   units_sq = { x*x for x in units }
 
   G, _ = equiv_classes(list(units), lambda x, y : any(a*x == y for a in units_sq))
@@ -125,7 +126,7 @@ def cyclic_MW_equiv(cyclic_type, G, pr_G):
 # la forme <a> + <b> + <c> + <d> où a, b, c, d sont des unités, modulo MW
 # Ensuite on peut tester l'équivalence avec la présentation de Knebuch par force
 # brute (modulo réduction avec symétries)
-def cyclic_MW_four_diag(cyclic_type, G, pr_G):
+def cyclic_MW_diags(cyclic_type, G, pr_G):
   n = cyclic_type.modulus
 
   vecs = [ ]
@@ -143,14 +144,17 @@ def cyclic_MW_four_diag(cyclic_type, G, pr_G):
 
           vecs.append(v)
 
+
   vecs, pr_vec = equiv_classes(vecs, cyclic_MW_equiv(cyclic_type, G, pr_G))
 
   return vecs, pr_vec
 
 
-def cyclic_GW_four_diag(cyclic_type, classes, pr):
+# Énumère les matrices diagonales 4x4 possibles à permutation près
+# et à choix près modulo un carré
+def cyclic_list_diags(cyclic_type, classes, pr, choice):
   n = cyclic_type.modulus
-  choice = [ next(iter(classes[i])) for i in range(len(classes)) ]
+  # on veut que choice associe à toute classe un choix de représentant
 
   diags = [ ]
 
@@ -158,38 +162,115 @@ def cyclic_GW_four_diag(cyclic_type, classes, pr):
     for j in range(len(classes)):
       for k in  range(len(classes)):
         for l in range(len(classes)):
-          diag = rings.Mat(4, 4)
+          diag = rings.Mat(4, 4, cyclic_type)
 
-          diag[0,0] = cyclic_type(choice(i))
-          diag[1,1] = cyclic_type(choice(j))
-          diag[2,2] = cyclic_type(choice(k))
-          diag[3,3] = cyclic_type(choice(l))
+          diag[0][0] = choice[i]
+          diag[1][1] = choice[j]
+          diag[2][2] = choice[k]
+          diag[3][3] = choice[l]
 
           diags.append(diag)
 
-
   # Prend une matrice diagonale et renvoie un élément de Z[G]
-  def pr_diag(diag):
+  def diag_to_vec(diag):
     v = [ 0 for _ in classes ]
 
-    v[pr(diag(0,0))] += 1
-    v[pr(diag(1,1))] += 1
-    v[pr(diag(2,2))] += 1
-    v[pr(diag(3,3))] += 1
+    v[pr(diag[0][0])] += 1
+    v[pr(diag[1][1])] += 1
+    v[pr(diag[2][2])] += 1
+    v[pr(diag[3][3])] += 1
 
     return v
+  
 
-  return 0
+  # On identifie les matrices qui sont obtenues l'une de l'autre par permutation
+  diags, pr_diag = equiv_classes(diags, (lambda d, e: diag_to_vec(d) == diag_to_vec(e)))
+
+  return diags, pr_diag
+
+
+
+# Prend un dévissage d'un anneau R, et renvoie une fonction qui associe à deux
+# matrices 4x4 diagonales D, D' à valeurs dans R la liste des P solutions de
+# l'équation P D tP = D'.
+# -----
+# rings_types: une liste d'anneaux R0, R1, ..., Rn = R
+# f: une liste de morphismes R1 -> R0, R2 -> R1, etc
+# units_mod_sq: fonction qui renvoie pour un anneau Ri les classes d'équivalence
+#   d'unités modulo carrés dans Ri, avec la projection
+# fib: tableau dont la ième entrée fib[i] contient une fonction qui associe
+#   à un élément de Ri l'ensemble des éléments de R(i+1) vivant au-dessus
+# el_base: ensemble des éléments de l'anneau R0
+# list_diags: liste de fonctions permettant de lister les diagonales
+def GW_base_change(ring_types, mor, fib, el_base, units_mod_sq):#, list_diags):
+  n = len(ring_types)
+  zero_ring = rings.create_cyclic_class(1)
+
+  R = [ zero_ring ] + ring_types
+  mor = [ lambda _: zero_ring(0) ] + mor
+  fib = [ lambda _: el_base ] + fib
+
+  units_mod_sq = [ cyclic_units_mod_sq(zero_ring) ] + units_mod_sq
+  cl_zero, pr_zero = units_mod_sq[0]
+
+  # On commence avec le seul choix d'unité que l'on peut faire
+  choice = [ [ zero_ring(1) ] ]
+
+  diags = [ cyclic_list_diags(zero_ring, cl_zero, pr_zero, choice[0]) ]
+
+  for k in range(1,n+1):
+    # construire la fonction de choix
+    cl, pr = units_mod_sq[k]
+    _, pr_low = units_mod_sq[k-1]
+
+    choice.append([])
+
+    for i in range(len(cl)):
+      # Représentant canonique de la classe un niveau en-dessous
+      c_low = choice[k-1][pr_low(mor[k-1](cl[i][0]))]
+
+      for j in range(len(cl[i])):
+        if mor[k-1](cl[i][j]) == c_low:
+          choice[k].append(cl[i][j])
+          break
+
+
+  return choice
+
+  sol = []
+
+
+
+  return sol[n] # TODO: bon indice ?
+
+
+N = 5 # On veut Z/2^NZ
+
+p = [ 2**(k+1) for k in range(N) ]
+R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
+
+
+mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(N-1) ]
+fib = [ (lambda i: lambda x: { R[i+1](x.value), R[i+1](x.value + p[i]) })(k) for k in range(N-1) ]
+el_base = { R[0](0), R[0](1) }
+units = [ cyclic_units_mod_sq(R[k]) for k in range(N) ]
+
+test = GW_base_change(R, mor, fib, el_base, units)
+
+print(test)
+
+
 
 
 
 # Notre anneau R est ici un Z/nZ
-R = rings.create_cyclic_class(256)
+#R = rings.create_cyclic_class(1)
+#G, pr_G = cyclic_units_mod_sq(R)
 
-G, pr_G = cyclic_units_mod_sq(R)
+#print(G)
 
-vecs, pr_vec = cyclic_MW_four_diag(R, G, pr_G)
-print(len(vecs))
+#vecs, pr_vec = cyclic_list_diags(R, G, pr_G)
+
 
 
 # Deux problèmes:
