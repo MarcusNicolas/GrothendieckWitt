@@ -1,12 +1,27 @@
+# Classe qui encode des anneaux finis
 class Ring:
+  @staticmethod
+  def zero():
+    raise NotImplementedError("'zero' non implémenté.")
+  
+  @staticmethod
+  def unit():
+    raise NotImplementedError("'unit' non implémentée.")
+  
   def __add__(self, other):
-    raise NotImplementedError("Addition not implemented")
+    raise NotImplementedError("Addition non implémentée.")
 
   def __sub__(self, other):
-    raise NotImplementedError("Subtraction not implemented")
+    return self + (-other)
 
   def __mul__(self, other):
-    raise NotImplementedError("Multiplication not implemented")
+    raise NotImplementedError("Multiplication non implémentée.")
+
+  def __neg__(self):
+    raise NotImplementedError("Négation non implémentée.")
+  
+  def __eq__(self, other):
+    raise NotImplementedError("Égalité non implémentée.")
 
   def __repr__(self):
-    raise NotImplementedError("Representation not implemented")
+    raise NotImplementedError("Représentation non implémentée.")
