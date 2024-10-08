@@ -33,6 +33,20 @@ def list_diags(finite_ring_type, G, pr_G, choice):
   return mat_type, diags
 
 
+
+def bil_form_eval(mat, u, v):
+  R = mat.ring_type
+  
+  e = R.zero()
+
+  for i in range(mat.size):
+    for j in range(mat.size):
+      print(mat[i,j])
+      e += u[i] * mat[i,j] * v[j]
+
+  return e
+
+
 # Prend un dévissage d'un anneau R, et renvoie une fonction qui associe à deux
 # matrices 4x4 diagonales D, D' à valeurs dans R la liste des P solutions de
 # l'équation P D tP = D'.
@@ -86,9 +100,6 @@ def GW_base_change(finite_ring_types, mor):
 
   for k in range(1,N+1):
     # Construire la fonction de choix
-    _, _ = ums[k]
-    _, _ = ums[k-1]
-
     choice.append([ ])
 
     for i in range(len(G[k])):
@@ -130,11 +141,22 @@ def GW_base_change(finite_ring_types, mor):
         break
 
 
+  # Ayant calculé les diagonales, on calcule les vecteurs unitaires pour chacune
+  # de ces normes
+
+  uvec = [ [  ] ]
+
+
   # pour r <= s, sol[k][r][s] contient les matrices de passage de
   #   diag[k][r] vers diag[k][s]
   
-  sols = [ [ [ rings.Mat(4, 4, zero_ring) ] ] ]
+  sols = [ [ [ mat_zero_type.unit() ] ] ]
 
+  for k in range(1, N+1):
+    # On a les solutions au niveau k-1
+
+    # Pour toute diagonale, on calcule
+    break
 
 
   return 0

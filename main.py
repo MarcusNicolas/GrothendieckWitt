@@ -1,7 +1,7 @@
 import rings
 
 # import MW_presentation
-from GW_presentation import GW_base_change
+from GW_presentation import GW_base_change, bil_form_eval
 
 
 
@@ -14,6 +14,26 @@ R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
 mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(N-1) ]
 
 test = GW_base_change(R, mor)
+
+# print(test)
+
+
+Mat = rings.create_mat_class(2, R[1])
+m = Mat.unit()
+
+m[0,1] = R[1](2)
+
+u = [ R[1](2), R[1](1) ]
+v = [ R[1](3), R[1](4) ]
+
+print(u)
+print("\n")
+print(m)
+print("\n")
+print(v)
+print("\n")
+
+print(bil_form_eval(m, u, v))
 
 
 '''
