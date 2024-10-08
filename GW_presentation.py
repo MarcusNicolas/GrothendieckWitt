@@ -41,7 +41,6 @@ def bil_form_eval(mat, u, v):
 
   for i in range(mat.size):
     for j in range(mat.size):
-      print(mat[i,j])
       e += u[i] * mat[i,j] * v[j]
 
   return e
@@ -143,8 +142,12 @@ def GW_base_change(finite_ring_types, mor):
 
   # Ayant calculé les diagonales, on calcule les vecteurs unitaires pour chacune
   # de ces normes
+  uvec = [ [ [ zero_ring.unit() for _ in range(4)] ] ]
+  pr_uvec = [  ]
 
-  uvec = [ [  ] ]
+  for k in range(1, N+1):
+    # On relève chacun des uvec, en gardant en mémoire pr_vec
+    continue
 
 
   # pour r <= s, sol[k][r][s] contient les matrices de passage de

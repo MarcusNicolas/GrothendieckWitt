@@ -18,13 +18,13 @@ test = GW_base_change(R, mor)
 # print(test)
 
 
-Mat = rings.create_mat_class(2, R[1])
+Mat = rings.create_mat_class(2, R[2])
 m = Mat.unit()
 
-m[0,1] = R[1](2)
+m[0,1] = R[2](2)
 
-u = [ R[1](2), R[1](1) ]
-v = [ R[1](3), R[1](4) ]
+u = [ R[2](2), R[2](1) ]
+v = [ R[2](3), R[2](0) ]
 
 print(u)
 print("\n")
