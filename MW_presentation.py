@@ -33,7 +33,7 @@ def solution_exists(M):
 # Prend un anneau fini et renvoie la matrice des relations pour MW
 def MW_matrix(finite_ring_type, G, pr_G):
   one = finite_ring_type.unit()
-  u = list(finite_ring_type.units())
+  u = list(finite_ring.units(finite_ring_type))
 
   mat = []
 
@@ -53,7 +53,7 @@ def MW_matrix(finite_ring_type, G, pr_G):
   for i in range(len(u)):
     a = u[i]
 
-    for j in range(i, range(len(u))):
+    for j in range(i, len(u)):
       b = u[j]
       c = u[i] + u[j]
 
