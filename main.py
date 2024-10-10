@@ -1,11 +1,11 @@
 import rings
 
 # import MW_presentation
-from GW_presentation import GW_base_change, bil_form_eval
+from GW_presentation import GW_base_change, fibs_fun
 
 
 
-N = 3 # On veut Z/2^NZ
+N = 1 # On veut Z/2^NZ
 
 p = [ 2**(k+1) for k in range(N) ]
 R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
@@ -13,27 +13,40 @@ R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
 
 mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(N-1) ]
 
-test = GW_base_change(R, mor)
 
-# print(test)
+sols, diags, build_mat = GW_base_change(R, mor)
+for k in range(1, N+1):
+  print("--------------\n")
+  print(f"Dans Z/{2**k}Z\n")
+
+  for r in range(len(diags[k])):
+    for s in range(len(diags[k])):
+      print(len(sols[k][r][s]))
+
+'''
+mor, choice, pr_G, diags, pr_diags, uvec, fibs_uvec = GW_base_change(R, mor)
 
 
-Mat = rings.create_mat_class(2, R[2])
-m = Mat.unit()
+for k in range(1, len(uvec)):
+  print("--------------\n")
+  print(f"Dans Z/{2**k}Z\n")
 
-m[0,1] = R[2](2)
+  for i in range(len(fibs_uvec[k-1])):
+    proj_i = pr_G[k-1](mor[k-1](choice[k][i]))
 
-u = [ R[2](2), R[2](1) ]
-v = [ R[2](3), R[2](0) ]
+    for r in range(len(fibs_uvec[k-1][i])):
+      proj_r = pr_diags[k-1][r]
 
-print(u)
-print("\n")
-print(m)
-print("\n")
-print(v)
-print("\n")
-
-print(bil_form_eval(m, u, v))
+      for s in range(len(fibs_uvec[k-1][i][r])):
+        for t in fibs_uvec[k-1][i][r][s]:
+          print("Le vecteur: ")
+          print(uvec[k][i][r][t])
+          print("est unitaire au-dessus de ")
+          print(uvec[k-1][proj_i][proj_r][s])
+          print("pour la forme")
+          print(diags[k][r])
+          print("\n")
+'''
 
 
 '''

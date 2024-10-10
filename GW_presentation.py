@@ -46,6 +46,34 @@ def bil_form_eval(mat, u, v):
   return e
 
 
+# Étant donné une fonction ensembliste fun: dom --> cod, on renvoie
+# une fonction qui associe à un élément de cod l'ensemble des éléments
+# de dom au-dessus
+def fibs_fun(dom, cod, fun):
+  fibs = dict()
+  
+  for y in cod:
+    fibs[y] = []
+
+  for x in dom:
+    fibs[fun(x)].append(x)
+
+  for y in cod:
+    fibs[y] = set(fibs[y])
+
+  return lambda y: fibs[y]
+
+
+def dot_product(ring_type, d, u, v):
+  n = len(d)
+  e = ring_type.zero()
+
+  for i in range(n):
+    e += d[i]*u[i]*v[i]
+
+  return e
+
+
 # Prend un dévissage d'un anneau R, et renvoie une fonction qui associe à deux
 # matrices 4x4 diagonales D, D' à valeurs dans R la liste des P solutions de
 # l'équation P D tP = D'.
@@ -58,21 +86,10 @@ def GW_base_change(finite_ring_types, mor):
 
   R = [ zero_ring ] + finite_ring_types
   mor = [ lambda _: zero_ring(0) ] + mor
+  el = [ R[k].elements() for k in range(N+1) ]
+  fibs_el = [ fibs_fun(el[k+1], el[k], mor[k]) for k in range(N) ]
+
   ums = [ rings.units_mod_sq(R[k]) for k in range(N+1) ]
-
-  G_zero, pr_zero = ums[0]
-
-  # On commence avec le seul choix d'unité que l'on peut faire
-  choice = [ [ zero_ring.unit() ] ]
-
-  mat_zero_type, dg_zero  = list_diags(zero_ring, G_zero, pr_zero, choice[0])
-  
-  mat_types = [ mat_zero_type ]
-  diags = [ dg_zero[0] ]
-
-  # Contient en rang k un tableau qui associe à chaque matrice de diags[k+1]
-  # l'indice de son projeté de diags[k]
-  pr_diags = [ ]
 
   # Prend une matrice 4x4 de R[k+1] et la projette sur R[k]
   def proj_mat(k, mat):
@@ -96,7 +113,21 @@ def GW_base_change(finite_ring_types, mor):
   G = [ pair_first(ums[k]) for k in range(N+1) ]
   pr_G = [ pair_second(ums[k]) for k in range(N+1) ]
 
+  # On commence avec le seul choix d'unité que l'on peut faire
+  choice = [ [ zero_ring.unit() ] ]
+  mat_zero_type, dg_zero  = list_diags(zero_ring, G[0], pr_G[0], choice[0])
+  
+  mat_types = [ mat_zero_type ]
+  diags = [ dg_zero[0] ]
 
+  # Contient en rang k un tableau qui associe à chaque matrice de diags[k+1]
+  # l'indice de son projeté de diags[k]
+  pr_diags = [ ]
+
+  # On construit des choix cohérents de matrices diagonales:
+  # - diags[k] contient la liste des matrices diagonales choisies dans R[k]
+  # - pr_diags[k-1][r] est l'indice tel que l'on ait l'identité
+  #   mor[k-1]( diags[k][r] ) == diags[k-1][ pr_diags[k-1][r] ]
   for k in range(1,N+1):
     # Construire la fonction de choix
     choice.append([ ])
@@ -142,24 +173,100 @@ def GW_base_change(finite_ring_types, mor):
 
   # Ayant calculé les diagonales, on calcule les vecteurs unitaires pour chacune
   # de ces normes
-  uvec = [ [ [ zero_ring.unit() for _ in range(4)] ] ]
-  pr_uvec = [  ]
+  # - uvec[k][i][r] donne la liste des vecteurs de norme choice[i] ("unitaires")
+  #   pour la forme donnée par la matrice diag[k][r]
+  # - fibs_uvec[k-1][i][r][s] liste les indices de uvec[k][i][r] dans lesquels
+  #   vivent les vecteurs au-dessus de uvec[k-1][proj_i][proj_r][s]
+  uvec = [ [ [ [ [ zero_ring.unit() for _ in range(4) ] ] ] ] ]
+  fibs_uvec = [ ]
 
   for k in range(1, N+1):
-    # On relève chacun des uvec, en gardant en mémoire pr_vec
-    continue
+    uvec.append([ ])
+    fibs_uvec.append([ ])
+
+    for i in range(len(G[k])):
+      proj_i = pr_G[k-1](mor[k-1](choice[k][i]))
+
+      uvec[k].append([ ])
+      fibs_uvec[k-1].append([ ])
+
+      for r in range(len(diags[k])):
+        proj_r = pr_diags[k-1][r]
+        uvec_low = uvec[k-1][proj_i][proj_r]
+
+        uvec[k][i].append([ ])
+        fibs_uvec[k-1][i].append([ [ ] for _ in range(len(uvec_low)) ])
+
+        t = 0
+
+        # pour chaque vecteur "unitaire" selon la matrice projetée...
+        for s in range(len(uvec_low)):
+          u_low = uvec_low[s]
+
+          for x1 in fibs_el[k-1](u_low[0]):
+            for x2 in fibs_el[k-1](u_low[1]):
+              for x3 in fibs_el[k-1](u_low[2]):
+                for x4 in fibs_el[k-1](u_low[3]):
+                  u = [ x1, x2, x3, x4 ]
+
+                  # on le rajoute s'il est un relevé "unitaire"
+                  if bil_form_eval(diags[k][r], u, u) == choice[k][i]:
+                    uvec[k][i][r].append(u)
+                    fibs_uvec[k-1][i][r][s].append(t)
+                    t += 1
 
 
-  # pour r <= s, sol[k][r][s] contient les matrices de passage de
-  #   diag[k][r] vers diag[k][s]
-  
-  sols = [ [ [ mat_zero_type.unit() ] ] ]
+  # pour r >= s (on doit avoir le cas r == s) pour pouvoir itérer),
+  # sol[k][r][s] contient les matrices de passage de
+  #   diags[k][s] = (d_i) vers diags[k][r] = (e_i) 
+  # Rq: on représente une telle matrice de passage P par la donnée
+  # de 4 entiers (p_i), et alors P est la matrice dont la ligne i est
+  # uvec[k][<e_i>][s][p_i]
+  sols = [ [ [ [ [0, 0, 0, 0] ] ] ] ]
+
+  def build_mat(k, r, s, p):
+    return mat_types[k]([ uvec[k][pr_G[k](diags[k][s][i,i])][r][p[i]] for i in range(4) ])
+
+  # print(build_mat(0, 0, 0, sols[0][0][0][0]))
 
   for k in range(1, N+1):
-    # On a les solutions au niveau k-1
+    sols.append([ ])
+    
+    for r in range(len(diags[k])):
+      proj_r = pr_diags[k-1][r]
+      sols[k].append([ ])
 
-    # Pour toute diagonale, on calcule
-    break
+      # e[i] est l'indice dans choice[k-1] de l'unité diags[k-1][proj_r][i,i]
+      e = [ pr_G[k-1](diags[k-1][proj_r][i,i]) for i in range(4)]
 
 
-  return 0
+      for s in range(r+1):
+        proj_s = pr_diags[k-1][s]
+        sols[k][r].append([ ])
+
+        d = [ diags[k][s][i,i] for i in range(4)]
+
+        for p_low in sols[k-1][proj_r][proj_s]:
+          for t1 in fibs_uvec[k-1][e[0]][s][p_low[0]]:
+            u1 = uvec[k][e[0]][s][t1]
+            
+            for t2 in fibs_uvec[k-1][e[1]][s][p_low[1]]:
+              u2 = uvec[k][e[1]][s][t2]
+
+              # Bizarre, sans cette ligne j'obtiens le bon résultat
+              # mais ça devrait marcher quand même...
+              if dot_product(R[k], d, u1, u2) != R[k].zero():
+                break
+
+              for t3 in fibs_uvec[k-1][e[2]][s][p_low[2]]:
+                u3 = uvec[k][e[2]][s][t3]
+
+                for t4 in fibs_uvec[k-1][e[3]][s][p_low[3]]:
+                  u4 = uvec[k][e[3]][s][t4]
+                  p_mat = mat_types[k]([u1, u2, u3, u4])
+
+                  if p_mat * diags[k][s] * p_mat.transpose() == diags[k][r]:
+                    sols[k][r][s].append([t1, t2, t3, t4])
+
+
+  return sols, diags, build_mat

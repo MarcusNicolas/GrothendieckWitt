@@ -45,6 +45,10 @@ class MatMeta(type):
         mat[i,i] = coeffs[i]
 
       return mat
+    
+    def transpose(self):
+      n = new_class.size
+      return new_class([ [ self[j,i] for j in range(n) ] for i in range(n)])
           
     def __getitem__(self, idx):
       i, j = idx
@@ -59,6 +63,7 @@ class MatMeta(type):
 
     new_class.__init__ = __init__
     new_class.diag = diag
+    new_class.transpose = transpose
     new_class.__getitem__ = __getitem__
     new_class.__setitem__ = __setitem__
     return new_class
