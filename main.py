@@ -4,18 +4,6 @@ import rings
 from GW_presentation import GW_base_change, fibs_fun
 from MW_presentation import MW_matrix
 
-A = rings.create_cyclic_class(128)
-G, pr_G = rings.units_mod_sq(A)
-
-print(G)
-
-relations = MW_matrix(A, G, pr_G)
-
-print(relations)
-
-
-
-
 
 N = 1 # On veut Z/2^NZ
 
@@ -33,8 +21,10 @@ for k in range(1, N+1):
 
   for r in range(len(diags[k])):
     for s in range(len(diags[k])):
-      continue
-      #print(len(sols[k][r][s]))
+      for p in sols[k][r][s]:
+        #print(build_mat(k, r, s, p))
+        #print("\n")
+        continue
 
 '''
 mor, choice, pr_G, diags, pr_diags, uvec, fibs_uvec = GW_base_change(R, mor)

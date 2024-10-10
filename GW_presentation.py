@@ -253,10 +253,14 @@ def GW_base_change(finite_ring_types, mor):
             for t2 in fibs_uvec[k-1][e[1]][s][p_low[1]]:
               u2 = uvec[k][e[1]][s][t2]
 
+              print(u1)
               # Bizarre, sans cette ligne j'obtiens le bon résultat
               # mais ça devrait marcher quand même...
               if dot_product(R[k], d, u1, u2) != R[k].zero():
+                print(f"{u1} n'est pas otn à {u2}\n")
                 break
+
+              print("\n")
 
               for t3 in fibs_uvec[k-1][e[2]][s][p_low[2]]:
                 u3 = uvec[k][e[2]][s][t3]
