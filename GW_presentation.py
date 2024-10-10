@@ -64,15 +64,6 @@ def fibs_fun(dom, cod, fun):
   return lambda y: fibs[y]
 
 
-def dot_product(ring_type, d, u, v):
-  n = len(d)
-  e = ring_type.zero()
-
-  for i in range(n):
-    e += d[i]*u[i]*v[i]
-
-  return e
-
 
 # Prend un dévissage d'un anneau R, et renvoie une fonction qui associe à deux
 # matrices 4x4 diagonales D, D' à valeurs dans R la liste des P solutions de
@@ -112,6 +103,7 @@ def GW_base_change(finite_ring_types, mor):
   
   G = [ pair_first(ums[k]) for k in range(N+1) ]
   pr_G = [ pair_second(ums[k]) for k in range(N+1) ]
+
 
   # On commence avec le seul choix d'unité que l'on peut faire
   choice = [ [ zero_ring.unit() ] ]
@@ -173,7 +165,7 @@ def GW_base_change(finite_ring_types, mor):
 
   # Ayant calculé les diagonales, on calcule les vecteurs unitaires pour chacune
   # de ces normes
-  # - uvec[k][i][r] donne la liste des vecteurs de norme choice[i] ("unitaires")
+  # - uvec[k][i][r] donne la liste des vecteurs de norme choice[k][i]
   #   pour la forme donnée par la matrice diag[k][r]
   # - fibs_uvec[k-1][i][r][s] liste les indices de uvec[k][i][r] dans lesquels
   #   vivent les vecteurs au-dessus de uvec[k-1][proj_i][proj_r][s]
@@ -216,9 +208,8 @@ def GW_base_change(finite_ring_types, mor):
                     t += 1
 
 
-  # pour r >= s (on doit avoir le cas r == s) pour pouvoir itérer),
-  # sol[k][r][s] contient les matrices de passage de
-  #   diags[k][s] = (d_i) vers diags[k][r] = (e_i) 
+  # pour r et s < len(diags[k]), la liste sol[k][r][s] contient les matrices
+  # de passage de diags[k][s] = (d_i) vers diags[k][r] = (e_i) 
   # Rq: on représente une telle matrice de passage P par la donnée
   # de 4 entiers (p_i), et alors P est la matrice dont la ligne i est
   # uvec[k][<e_i>][s][p_i]
@@ -227,50 +218,91 @@ def GW_base_change(finite_ring_types, mor):
   def build_mat(k, r, s, p):
     return mat_types[k]([ uvec[k][pr_G[k](diags[k][s][i,i])][r][p[i]] for i in range(4) ])
 
-  # print(build_mat(0, 0, 0, sols[0][0][0][0]))
 
   for k in range(1, N+1):
     sols.append([ ])
     
+    tot_mat = 0
+    compt = 1
+
+    # Si k == N, on n'a peut s'arrêter dès qu'on sait qu'il existe une solution
+    last_ring = (k == N)
+
     for r in range(len(diags[k])):
+      proj_r = pr_diags[k-1][r]
+
+      for s in range(len(diags[k])):
+        proj_s = pr_diags[k-1][s]
+        tot_mat += len(sols[k-1][proj_r][proj_s])
+        
+
+
+    for r in range(len(diags[k])):
+
       proj_r = pr_diags[k-1][r]
       sols[k].append([ ])
 
-      # e[i] est l'indice dans choice[k-1] de l'unité diags[k-1][proj_r][i,i]
-      e = [ pr_G[k-1](diags[k-1][proj_r][i,i]) for i in range(4)]
+      # e[i] est l'indice dans choice[k-1] de diags[k][r][i,i]
+      e = [ pr_G[k](diags[k][r][i,i]) for i in range(4)]
 
-
-      for s in range(r+1):
+      # puis on calcule les matrices de passage par force brute
+      for s in range(len(diags[k])):
         proj_s = pr_diags[k-1][s]
         sols[k][r].append([ ])
 
-        d = [ diags[k][s][i,i] for i in range(4)]
+        otn = lambda u, v: bil_form_eval(diags[k][s], u, v) == R[k].zero()
 
         for p_low in sols[k-1][proj_r][proj_s]:
-          for t1 in fibs_uvec[k-1][e[0]][s][p_low[0]]:
+          soL_exists = False
+
+          print(f"matrice {compt}/{tot_mat}\n")
+          compt += 1
+
+          fib_u = [ fibs_uvec[k-1][e[i]][s][p_low[i]] for i in range(4) ]
+
+          if len(fib_u[0]) == 0 or len(fib_u[1]) == 0 or len(fib_u[2]) == 0 or len(fib_u[3]) == 0:
+            continue
+
+          mdzd = len(fib_u[0])*len(fib_u[1])*len(fib_u[2])*len(fib_u[3])
+          print(mdzd)
+
+          for t1 in fib_u[0]:
             u1 = uvec[k][e[0]][s][t1]
+
+            if last_ring and soL_exists:
+              break
             
-            for t2 in fibs_uvec[k-1][e[1]][s][p_low[1]]:
+            for t2 in fib_u[1]:
               u2 = uvec[k][e[1]][s][t2]
 
-              print(u1)
-              # Bizarre, sans cette ligne j'obtiens le bon résultat
-              # mais ça devrait marcher quand même...
-              if dot_product(R[k], d, u1, u2) != R[k].zero():
-                print(f"{u1} n'est pas otn à {u2}\n")
+              if last_ring and soL_exists:
                 break
+              if not otn(u1, u2):
+                continue
 
-              print("\n")
-
-              for t3 in fibs_uvec[k-1][e[2]][s][p_low[2]]:
+              for t3 in fib_u[2]:
                 u3 = uvec[k][e[2]][s][t3]
 
-                for t4 in fibs_uvec[k-1][e[3]][s][p_low[3]]:
-                  u4 = uvec[k][e[3]][s][t4]
-                  p_mat = mat_types[k]([u1, u2, u3, u4])
+                if last_ring and soL_exists:
+                  break
+                if not (otn(u1, u3) and otn(u2, u3)):
+                  continue
 
-                  if p_mat * diags[k][s] * p_mat.transpose() == diags[k][r]:
-                    sols[k][r][s].append([t1, t2, t3, t4])
+                for t4 in fib_u[3]:
+                  u4 = uvec[k][e[3]][s][t4]
+
+                  if last_ring and soL_exists:
+                    break
+                  if not (otn(u1, u4) and otn(u2, u4) and otn(u3, u4)):
+                    continue
+
+                  sols[k][r][s].append([t1, t2, t3, t4])
+                  soL_exists = True
+
+
+
+  # On construit maintenant les matrices de relations pour chaque k
+  rels = [ ]
 
 
   return sols, diags, build_mat
