@@ -1,3 +1,4 @@
+import sympy
 
 import equiv
 import rings
@@ -71,7 +72,7 @@ def fibs_fun(dom, cod, fun):
 # -----
 # finite_ring_types: une liste d'anneaux finis R0, R1, ..., Rn = R
 # mor: une liste de morphismes R1 -> R0, R2 -> R1, etc
-def GW_base_change(finite_ring_types, mor):
+def GW_matrices(finite_ring_types, mor):
   N = len(finite_ring_types)
   zero_ring = rings.create_cyclic_class(1)
 
@@ -255,16 +256,13 @@ def GW_base_change(finite_ring_types, mor):
         for p_low in sols[k-1][proj_r][proj_s]:
           soL_exists = False
 
-          print(f"matrice {compt}/{tot_mat}\n")
+          print(f"[{k}] matrice {compt}/{tot_mat}\n")
           compt += 1
 
           fib_u = [ fibs_uvec[k-1][e[i]][s][p_low[i]] for i in range(4) ]
 
           if len(fib_u[0]) == 0 or len(fib_u[1]) == 0 or len(fib_u[2]) == 0 or len(fib_u[3]) == 0:
             continue
-
-          mdzd = len(fib_u[0])*len(fib_u[1])*len(fib_u[2])*len(fib_u[3])
-          print(mdzd)
 
           for t1 in fib_u[0]:
             u1 = uvec[k][e[0]][s][t1]
@@ -302,7 +300,21 @@ def GW_base_change(finite_ring_types, mor):
 
 
   # On construit maintenant les matrices de relations pour chaque k
-  rels = [ ]
+  rel_mats = [ ]
+  subs = lambda u, v: [ u[i] - v[i] for i in range(len(u)) ]
 
+  for k in range(1,N+1):
+    rel = [ ]
+    vec = lambda r: diag_to_vec(diags[k][r], G[k], pr_G[k])
 
-  return sols, diags, build_mat
+    for r in range(len(diags[k])):
+      for s in range(r):
+        # S'il existe une solution...
+        if sols[k][r][s] != 0:
+          rel.append(subs(vec(r), vec(s)))
+
+    print(len(rel))
+
+    rel_mats.append(sympy.Matrix(sympy.Matrix(rel).rowspace()).transpose())
+
+  return rel_mats, choice
