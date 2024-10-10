@@ -5,7 +5,7 @@ from GW_presentation import GW_matrices, fibs_fun
 from MW_presentation import MW_matrix
 
 
-N = 3 # On veut Z/2^NZ
+N = 2 # On veut Z/2^NZ
 
 p = [ 2**(k+1) for k in range(N) ]
 R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
