@@ -216,9 +216,6 @@ def GW_matrices(finite_ring_types, mor):
   # uvec[k][<e_i>][s][p_i]
   sols = [ [ [ [ [0, 0, 0, 0] ] ] ] ]
 
-  def build_mat(k, r, s, p):
-    return mat_types[k]([ uvec[k][pr_G[k](diags[k][s][i,i])][r][p[i]] for i in range(4) ])
-
 
   for k in range(1, N+1):
     sols.append([ ])
