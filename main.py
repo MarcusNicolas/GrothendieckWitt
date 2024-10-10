@@ -17,7 +17,7 @@ GW_mat, choice = GW_matrices(R, mor)
 
 
 for k in range(N):
-  with open(f"GW cyclic{p[k]}.txt", "w") as file:
+  with open(f"GW_{p[k]}.txt", "w") as file:
     file.write(f"Classes: {choice[k+1]}\n-----------------\n\n")
     file.write(str(GW_mat[k]))
 
