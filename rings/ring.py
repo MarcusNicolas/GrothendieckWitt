@@ -25,3 +25,13 @@ class Ring:
 
   def __repr__(self):
     raise NotImplementedError("Représentation non implémentée.")
+
+
+
+def ring_sum(ring_type, list):
+  s = ring_type.zero()
+
+  for x in list:
+    s += x
+
+  return s
