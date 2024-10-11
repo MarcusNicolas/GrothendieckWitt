@@ -9,7 +9,7 @@ class MatMeta(type):
     new_class = super().__new__(cls, name, bases, attrs)
     # Add a __init__ method dynamically
     def __init__(self, mat):
-      self.mat = [ [ new_class.ring_type(0) for _ in range(new_class.size) ] for _ in range(new_class.size) ]
+      self.mat = [ [ new_class.ring_type.zero() for _ in range(new_class.size) ] for _ in range(new_class.size) ]
 
       if len(mat) != new_class.size:
         raise ValueError("Pas le bon nombre de lignes.")
@@ -62,7 +62,6 @@ class MatMeta(type):
     return new_class
 
   def __call__(cls, mat):
-    # Return an instance of the class
     return super().__call__(mat)
 
 

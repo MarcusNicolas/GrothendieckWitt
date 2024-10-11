@@ -317,6 +317,8 @@ def GW_matrices(finite_ring_types, mor):
     rel = [ ]
     vec = lambda r: diag_to_vec(diags[k][r], G[k], pr_G[k])
 
+    vec_rel.append([ ])
+
     for r in range(len(diags[k])):
       u = vec(r)
 
@@ -325,7 +327,7 @@ def GW_matrices(finite_ring_types, mor):
         
         # S'il existe une solution...
         if len(sols[k][r][s]) != 0:
-          vec_rel.append([u, v])
+          vec_rel[k-1].append([u, v])
           rel.append(subs(vec(r), vec(s)))
 
 

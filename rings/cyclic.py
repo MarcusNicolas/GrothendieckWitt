@@ -1,12 +1,10 @@
 from .finite_ring import FiniteRing
 
 
-# Métaclasse pour créer Cyclic(n)
 class CyclicMeta(type):
   def __new__(cls, name, bases, attrs):
-    # Create the class
     new_class = super().__new__(cls, name, bases, attrs)
-    # Add a __init__ method dynamically
+
     def __init__(self, value):
       self.value = value % new_class.modulus
     
@@ -15,7 +13,6 @@ class CyclicMeta(type):
     return new_class
 
   def __call__(cls, value):
-    # Return an instance of the class
     return super().__call__(value)
 
 

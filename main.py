@@ -1,29 +1,18 @@
 import rings
-
-# import MW_presentation
-from GW_presentation import GW_matrices, fibs_fun
+from GW_presentation import GW_matrices
 from MW_presentation import MW_matrix
 
 
-N = 3 # On veut Z/2^NZ
+def GW_matrices_output(R, mor, pfx):
+  N = len(R)
+  GW_mat, vec_rel, choice = GW_matrices(R, mor)
 
-p = [ 2**(k+1) for k in range(N) ]
-R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
+  for k in range(N):
+    G, pr_G = rings.units_mod_sq(R[k])
+    MW_mat = MW_matrix(R[k], G, pr_G)
 
-
-mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(N-1) ]
-
-GW_mat, vec_rel, choice = GW_matrices(R, mor)
-
-
-for k in range(N):
-  with open(f"GW_{p[k]}.txt", "w") as file:
-    file.write(f"Classes: {choice[k+1]}\n")
-    file.write(f"Matrice: {str(GW_mat[k])}\n----------------\n\n")
-    file.write(f"Relations: {str(vec_rel)}")
-
-
-# Deux problèmes:
-# 1) On veut regarder quels sont les relations (a_i) = (b_i) impliquées par
-#    celles de la présentation MW (comment faire ?)
-# 2) On veut regarder lesquelles de ces classes sont identifiées dans GW
+    with open(f"GW_{pfx}{k}.txt", "w") as file:
+      file.write(f"Classes: {choice[k+1]}\n\n")
+      file.write(f"MW: {str(MW_mat)}\n")
+      file.write(f"GW: {str(GW_mat[k])}\n----------------\n\n")
+      file.write(f"Relations (pour GW): {str(vec_rel[k])}")
