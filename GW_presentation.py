@@ -234,7 +234,9 @@ def GW_matrices(finite_ring_types, mor):
         tot_mat += len(sols[k-1][proj_r][proj_s])
         
 
-
+    # TODO: implémenter inverse matriciel pour diviser par deux le temps
+    # TODO: implémenter avec plusieurs coeurs
+    # TODO: polynômes tronqués
     for r in range(len(diags[k])):
 
       proj_r = pr_diags[k-1][r]
@@ -245,13 +247,20 @@ def GW_matrices(finite_ring_types, mor):
 
       # puis on calcule les matrices de passage par force brute
       for s in range(len(diags[k])):
+        if last_ring and s >= r:
+          break
+
         proj_s = pr_diags[k-1][s]
         sols[k][r].append([ ])
+        
+        soL_exists = False
 
         otn = lambda u, v: bil_form_eval(diags[k][s], u, v) == R[k].zero()
 
         for p_low in sols[k-1][proj_r][proj_s]:
-          soL_exists = False
+
+          if last_ring and soL_exists:
+            break
 
           print(f"[{k}] matrice {compt}/{tot_mat}\n")
           compt += 1
@@ -291,6 +300,10 @@ def GW_matrices(finite_ring_types, mor):
                   if not (otn(u1, u4) and otn(u2, u4) and otn(u3, u4)):
                     continue
 
+                  p = mat_types[k]([u1, u2, u3, u4])
+
+                  assert p * diags[k][s] * p.transpose() == diags[k][r], "ERREUR"
+
                   sols[k][r][s].append([t1, t2, t3, t4])
                   soL_exists = True
 
@@ -298,6 +311,7 @@ def GW_matrices(finite_ring_types, mor):
 
   # On construit maintenant les matrices de relations pour chaque k
   rel_mats = [ ]
+  vec_rel = [ ]
   subs = lambda u, v: [ u[i] - v[i] for i in range(len(u)) ]
 
   for k in range(1,N+1):
@@ -305,13 +319,17 @@ def GW_matrices(finite_ring_types, mor):
     vec = lambda r: diag_to_vec(diags[k][r], G[k], pr_G[k])
 
     for r in range(len(diags[k])):
+      u = vec(r)
+
       for s in range(r):
+        v = vec(s)
+        
         # S'il existe une solution...
-        if sols[k][r][s] != 0:
+        if len(sols[k][r][s]) != 0:
+          vec_rel.append([u, v])
           rel.append(subs(vec(r), vec(s)))
 
-    print(len(rel))
 
     rel_mats.append(sympy.Matrix(sympy.Matrix(rel).rowspace()).transpose())
 
-  return rel_mats, choice
+  return rel_mats, vec_rel, choice

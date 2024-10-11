@@ -5,7 +5,7 @@ from GW_presentation import GW_matrices, fibs_fun
 from MW_presentation import MW_matrix
 
 
-N = 4 # On veut Z/2^NZ
+N = 3 # On veut Z/2^NZ
 
 p = [ 2**(k+1) for k in range(N) ]
 R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
@@ -13,13 +13,14 @@ R = [ rings.create_cyclic_class(p[k]) for k in range(N) ]
 
 mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(N-1) ]
 
-GW_mat, choice = GW_matrices(R, mor)
+GW_mat, vec_rel, choice = GW_matrices(R, mor)
 
 
 for k in range(N):
   with open(f"GW_{p[k]}.txt", "w") as file:
-    file.write(f"Classes: {choice[k+1]}\n-----------------\n\n")
-    file.write(str(GW_mat[k]))
+    file.write(f"Classes: {choice[k+1]}\n")
+    file.write(f"Matrice: {str(GW_mat[k])}\n----------------\n\n")
+    file.write(f"Relations: {str(vec_rel)}")
 
 
 # Deux problèmes:
