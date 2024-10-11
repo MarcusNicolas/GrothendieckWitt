@@ -236,7 +236,6 @@ def GW_matrices(finite_ring_types, mor):
 
     # TODO: implémenter inverse matriciel pour diviser par deux le temps
     # TODO: implémenter avec plusieurs coeurs
-    # TODO: polynômes tronqués
     for r in range(len(diags[k])):
 
       proj_r = pr_diags[k-1][r]

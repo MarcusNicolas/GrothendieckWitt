@@ -19,10 +19,14 @@ class TruncPolMeta(type):
       
       self.coeffs[idx] = val
     
+    @staticmethod
+    def elements():
+
 
     new_class.__init__ = __init__
     new_class.__getitem__ = __getitem__
     new_class.__setitem__ = __setitem__
+    new_class.elements = elements
 
     return new_class
 
@@ -41,6 +45,8 @@ def create_trunc_pol_class(n, rg):
     "zero": staticmethod(lambda: cls([ rg.zero() for _ in range(n) ])),
 
     "unit": staticmethod(lambda: cls([ rg.unit() if i == 0 else rg.zero() for i in range(n) ])),
+
+    #"elements": staticmethod(lambda: { cls(i) for i in range(n) } ),
 
     "__add__": lambda self, other: cls([ self[i] + other[i] for i in range(n) ]) if isinstance(other, cls) else TypeError("On ne peut additionner que des instances de la même classe."),
 
