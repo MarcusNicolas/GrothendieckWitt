@@ -333,6 +333,6 @@ def GW_matrices(finite_ring_types, mor):
           rel.append(subs(vec(r), vec(s)))
 
 
-    rel_mats.append(sympy.Matrix(remove_doubles(rel).transpose()))
+    rel_mats.append(sympy.Matrix(remove_doubles(rel)).transpose())
 
   return rel_mats, vec_rel, choice

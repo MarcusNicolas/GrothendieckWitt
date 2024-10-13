@@ -56,7 +56,7 @@ class TruncPolMeta(type):
   
 
 def create_trunc_pol_class(n, rg):
-  class_name = f"{rg.__name__}[X]/(X^{n})"
+  class_name = f"Pol({n}, {rg.__name__})"
   attrs = {
     "max_deg": n,
     "ring_type": rg,

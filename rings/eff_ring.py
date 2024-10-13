@@ -56,7 +56,7 @@ class EffMeta(type):
 
 
 def create_eff_ring(rg, el):
-  class_name = f"Eff[{rg.__name__}]"
+  class_name = f"Eff_{rg.__name__}"
   attrs = {
     "ring_type": rg,
     "data_el": list(el),

@@ -18,8 +18,8 @@ def GW_matrices_output(R, mor):
 
     with open(f"GW_{R[k].__name__}.txt", "w") as file:
       file.write(f"Classes: {choice[k+1]}\n\n")
-      file.write(f"MW_rel: {str(MW_mat)}\n")
-      file.write(f"MW_smith: {str(MW_smith)}\n----------------\n\n")
-      file.write(f"GW_rel: {str(GW_mat[k])}\n")
-      file.write(f"GW_smith: {str(GW_smith)}\n----------------\n\n")
+      file.write(f"MW_rel: {str(MW_mat.transpose())}\n")
+      file.write(f"MW_smith: {str(MW_smith.transpose())}\n----------------\n\n")
+      file.write(f"GW_rel: {str(GW_mat[k].transpose())}\n")
+      file.write(f"GW_smith: {str(GW_smith.transpose())}\n----------------\n\n")
       file.write(f"Relations (pour GW): {str(vec_rel[k])}")
