@@ -2,8 +2,9 @@ import rings
 from GW_presentation import GW_matrices
 from MW_presentation import MW_matrix
 
+import sympy.matrices.normalforms
 
-def GW_matrices_output(R, mor, pfx):
+def GW_matrices_output(R, mor):
   N = len(R)
   GW_mat, vec_rel, choice = GW_matrices(R, mor)
 
@@ -11,8 +12,14 @@ def GW_matrices_output(R, mor, pfx):
     G, pr_G = rings.units_mod_sq(R[k])
     MW_mat = MW_matrix(R[k], G, pr_G)
 
-    with open(f"GW_{pfx}{k}.txt", "w") as file:
+    
+    MW_smith = sympy.matrices.normalforms.smith_normal_form(MW_mat, domain=sympy.ZZ)
+    GW_smith = sympy.matrices.normalforms.smith_normal_form(GW_mat[k], domain=sympy.ZZ)
+
+    with open(f"GW_{R[k].__name__}.txt", "w") as file:
       file.write(f"Classes: {choice[k+1]}\n\n")
-      file.write(f"MW: {str(MW_mat)}\n")
-      file.write(f"GW: {str(GW_mat[k])}\n----------------\n\n")
+      file.write(f"MW_rel: {str(MW_mat)}\n")
+      file.write(f"MW_smith: {str(MW_smith)}\n----------------\n\n")
+      file.write(f"GW_rel: {str(GW_mat[k])}\n")
+      file.write(f"GW_smith: {str(GW_smith)}\n----------------\n\n")
       file.write(f"Relations (pour GW): {str(vec_rel[k])}")

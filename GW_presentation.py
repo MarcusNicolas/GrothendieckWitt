@@ -3,6 +3,8 @@ import sympy
 import equiv
 import rings
 
+from MW_presentation import remove_doubles
+
 # Prend une matrice diagonale 4x4 et renvoie un élément de Z[G]
 def diag_to_vec(D, G, pr_G):
   v = [ 0 for _ in G ]
@@ -331,6 +333,6 @@ def GW_matrices(finite_ring_types, mor):
           rel.append(subs(vec(r), vec(s)))
 
 
-    rel_mats.append(sympy.Matrix(sympy.Matrix(rel).rowspace()).transpose())
+    rel_mats.append(sympy.Matrix(remove_doubles(rel).transpose()))
 
   return rel_mats, vec_rel, choice

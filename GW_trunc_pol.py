@@ -20,5 +20,5 @@ mor_idx = [ (lambda i: rings.precompute(list(range(len(R_eff[i+1].data_el))), (l
 mor_eff = [ (lambda i: lambda x: R_eff[i](mor_idx[i](x.idx)))(k) for k in range(len(mor)) ]
 
 
-GW_matrices_output(R_eff, mor_eff, "pol")
+GW_matrices_output(R_eff, mor_eff)
 

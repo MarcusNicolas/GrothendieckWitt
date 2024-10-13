@@ -1,4 +1,5 @@
 import sympy
+import sympy.polys.matrices
 import sympy.matrices.normalforms
 
 import equiv
@@ -28,6 +29,14 @@ def solution_exists(M):
 
   return test
 
+
+def remove_doubles(vec):
+  sol = dict()
+
+  for v in vec:
+    sol[tuple(v)] = v
+
+  return list(sol.values())
 
 
 # Prend un anneau fini et renvoie la matrice des relations pour MW
@@ -69,8 +78,7 @@ def MW_matrix(finite_ring_type, G, pr_G):
       mat.append(rel)
         
 
-  # On construit une famille libre de relations
-  mat = sympy.Matrix(sympy.Matrix(mat).rowspace())
+  mat = sympy.Matrix(remove_doubles(mat))
 
   return mat.transpose() # Les relations doivent être des colonnes
 

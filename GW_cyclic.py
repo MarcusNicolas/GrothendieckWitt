@@ -13,5 +13,4 @@ p = [ 2**(k+1) for k in range(args.N) ]
 R = [ rings.create_cyclic_class(p[k]) for k in range(args.N) ]
 mor = [ (lambda i: ( lambda x: R[i](x.value) ))(k) for k in range(args.N-1) ]
 
-GW_matrices_output(R, mor, "cyc")
-
+GW_matrices_output(R, mor)
