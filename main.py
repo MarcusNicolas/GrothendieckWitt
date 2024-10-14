@@ -60,6 +60,11 @@ rels = []
 print(T.__name__)
 
 
+# La relation qui suit est trop forte, par contre elle explique ce qu'il se
+# passe pour les anneaux de polynômes jusqu'à C2[X]/(X^4)
+# La relation <a>+<b>+<c>+<d> = <a+b+c>+<a+b+d>+<a+c+d>+<b+c+d> fonctionne pour
+# les groupes cycliques.
+# Peut-être remplacer a+b+c par (a+b+c)*d ??????????????
 for a in u:
   for b in u:
     for c in u:
@@ -68,35 +73,42 @@ for a in u:
 
         rel[pr_G(a)] += 1
         rel[pr_G(b)] += 1
-        rel[pr_G(c)] += 1
-        rel[pr_G(d)] += 1
+        rel[pr_G(c)] -= 1
+        rel[pr_G(a*b*c)] -= 1
 
-        rel[pr_G(b+c+d)] -= 1
-        rel[pr_G(a+c+d)] -= 1
-        rel[pr_G(a+b+d)] -= 1
-        rel[pr_G(a+b+c)] -= 1
-
-        
         rels.append(rel)
 
 
 MW_rels = MW_matrix(T, G, pr_G).transpose()
 
+
 rels = sympy.Matrix(rels).col_join(MW_rels).tolist()
-rels = sympy.Matrix(remove_doubles(rels))
+rels = remove_doubles(rels)
+
+
+GW_rels = [[-1, 1, 1, -1], [-2, 0, 2, 0], [-1, -1, 1, 1], [0, -2, 0, 2], [-4, 4, 0, 0], [-2, 4, -2, 0], [-1, 3, 1, -3], [-3, 3, -1, 1], [-1, 3, -3, 1], [-2, 2, 2, -2], [-4, 2, 0, 2], [-2, 2, -2, 2], [-3, 1, 3, -1], [-3, 1, -1, 3], [-1, 1, -3, 3], [-4, 0, 4, 0], [0, -4, 4, 0], [0, -2, 4, -2], [-3, -1, 3, 1], [-2, -2, 2, 2], [-1, -3, 1, 3], [-4, 0, 0, 4], [-2, 0, -2, 4], [0, -4, 0, 4], [0, 0, -4, 4]]
+
+GW_mat = sympy.Matrix(GW_rels).transpose()
 
 print(rels)
 
+mat = sympy.Matrix(rels).transpose()
 
-GW_rels = sympy.Matrix([[-1, 1, 1, -1], [-2, 0, 2, 0], [-1, -1, 1, 1], [0, -2, 0, 2], [-4, 4, 0, 0], [-2, 4, -2, 0], [-1, 3, 1, -3], [-3, 3, -1, 1], [-1, 3, -3, 1], [-2, 2, 2, -2], [-4, 2, 0, 2], [-2, 2, -2, 2], [-3, 1, 3, -1], [-3, 1, -1, 3], [-1, 1, -3, 3], [-4, 0, 4, 0], [0, -4, 4, 0], [0, -2, 4, -2], [-3, -1, 3, 1], [-2, -2, 2, 2], [-1, -3, 1, 3], [-4, 0, 0, 4], [-2, 0, -2, 4], [0, -4, 0, 4], [0, 0, -4, 4]])
-GW_mat = GW_rels.transpose()
+MW_solver = solution_exists(mat)
+GW_solver = solution_exists(GW_mat)
 
-mat = rels.transpose()
+print("\n\nMW + rel => GW\n")
 
-MW_solver = solution_exists(MW_rels)
+for ln in GW_rels:
+  if not MW_solver(ln):
+    print(f"La relation {ln} reste inexpliquée")
 
-rels_explains_GW = all(MW_solver(ln) for ln in GW_rels)
 
-print(rels_explains_GW)
+print("\n\nMW + rel <= GW\n")
+
+for ln in rels:
+  if not GW_solver(ln):
+    print(f"La relation {ln} reste inexpliquée")
+
 
 

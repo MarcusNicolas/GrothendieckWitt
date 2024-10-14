@@ -20,7 +20,7 @@ def solution_exists(M):
       if i < m:
         if D[i, i] == 0 and w[i, 0] != 0:
           return False
-        if w[i, 0] % D[i, i] != 0:
+        if D[i, i] != 0 and w[i, 0] % D[i, i] != 0:
           return False
       if i >= m and w[i, 0] != 0:
         return False
