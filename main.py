@@ -82,20 +82,21 @@ for a in u:
 
 MW_rels = MW_matrix(T, G, pr_G).transpose()
 
-rels = sympy.Matrix(remove_doubles(rels)).col_join(MW_rels)
+rels = sympy.Matrix(rels).col_join(MW_rels).tolist()
+rels = sympy.Matrix(remove_doubles(rels))
+
+print(rels)
+
 
 GW_rels = sympy.Matrix([[-1, 1, 1, -1], [-2, 0, 2, 0], [-1, -1, 1, 1], [0, -2, 0, 2], [-4, 4, 0, 0], [-2, 4, -2, 0], [-1, 3, 1, -3], [-3, 3, -1, 1], [-1, 3, -3, 1], [-2, 2, 2, -2], [-4, 2, 0, 2], [-2, 2, -2, 2], [-3, 1, 3, -1], [-3, 1, -1, 3], [-1, 1, -3, 3], [-4, 0, 4, 0], [0, -4, 4, 0], [0, -2, 4, -2], [-3, -1, 3, 1], [-2, -2, 2, 2], [-1, -3, 1, 3], [-4, 0, 0, 4], [-2, 0, -2, 4], [0, -4, 0, 4], [0, 0, -4, 4]])
 GW_mat = GW_rels.transpose()
 
 mat = rels.transpose()
-print(mat)
 
 MW_solver = solution_exists(MW_rels)
 
 rels_explains_GW = all(MW_solver(ln) for ln in GW_rels)
 
 print(rels_explains_GW)
-
-mat = mat.transpose()
 
 
